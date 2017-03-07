@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;WikiParser&gt;">
+    <CLASSES>
+      <root url="file://C:/tools/go/bin/src/github.com" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://C:/tools/go/bin/src/github.com" />
+    </SOURCES>
+  </library>
+</component>
