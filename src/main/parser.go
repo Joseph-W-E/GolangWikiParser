@@ -16,7 +16,6 @@ func ParseInput(chFanOut <- chan string, numParsers int) [] <- chan string {
 	}
 
 	return helpers
-
 }
 
 func parseHelper(input <- chan string) <- chan string {
@@ -25,6 +24,11 @@ func parseHelper(input <- chan string) <- chan string {
 	go func() {
 
 		for s := range input {
+
+			// select only consecutive strings of [A-z]+
+
+			// feed into the channel a tuple ( [A-z]+, 1 )
+
 			if s == "the" {
 				channel <- "potato"
 			}

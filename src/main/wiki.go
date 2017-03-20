@@ -17,7 +17,6 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
 }
 
 // handle a request from the socket
@@ -44,6 +43,6 @@ func handleRequest(w http.ResponseWriter, request *http.Request) {
 			x++
 		}
 		log.Println(x)
-	}
 
+	}
 }
