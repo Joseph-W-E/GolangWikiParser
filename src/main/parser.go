@@ -1,9 +1,14 @@
 package main
 
-import "log"
+import (
+	"log"
+	"sync"
+	"regexp"
+	"time"
+)
 
 /* ~~~ Fan Out ~~~ */
-func ParseInput(chFanOut <- chan string, numParsers int) [] <- chan string {
+func ParseInput(chTokens <- chan string, numParsers int) [] <- chan string {
 	log.Println("Fanning out parsers...")
 
 	helpers := make([] <- chan string, numParsers)
@@ -12,7 +17,7 @@ func ParseInput(chFanOut <- chan string, numParsers int) [] <- chan string {
 	// aka, fanning out
 
 	for i := range helpers {
-		helpers[i] = parseHelper(chFanOut)
+		helpers[i] = parseHelper(chTokens)
 	}
 
 	return helpers
@@ -25,12 +30,14 @@ func parseHelper(input <- chan string) <- chan string {
 
 		for s := range input {
 
-			// select only consecutive strings of [A-z]+
+			// simulate taking awhile
+			time.Sleep(100)
 
-			// feed into the channel a tuple ( [A-z]+, 1 )
+			expression := regexp.MustCompile("[^A-z]+")
+			charactersOnly := expression.ReplaceAllString(s, "")
 
-			if s == "the" {
-				channel <- "potato"
+			if (charactersOnly != "") {
+				channel <- charactersOnly
 			}
 		}
 
@@ -45,28 +52,47 @@ func parseHelper(input <- chan string) <- chan string {
 func FanIn(incomingChannels [] <- chan string) <- chan string {
 	log.Println("Fanning in parsers...")
 
-	channel := make(chan string)
-	count := 0
+	var waitGroup sync.WaitGroup
+	chMerged := make(chan string)
 
-	for _, helperChannel := range incomingChannels {
-
-		// here, we launch a bunch of functions to feed all the separate channels into ONE channel
-		// aka, fanning in
-
-		go func() {
-
-			for s := range helperChannel {
-				channel <- s
-			}
-
-			count++
-			if (count == len(incomingChannels)) {
-				close(channel)
-			}
-
-		}()
-
+	// this is our function to pull data from a helper into the merged channel
+	funnel := func(chHelper <- chan string) {
+		for val := range chHelper {
+			chMerged <- val
+		}
+		waitGroup.Done()
 	}
 
-	return channel
+	// once .Done() is called len(incomingChannels) times, .Wait() will no longer block
+	waitGroup.Add(len(incomingChannels))
+
+	// start funneling all the helpers' channels into chMerged
+	for _, channel := range incomingChannels {
+		go funnel(channel)
+	}
+
+	// wait for the helpers to finish
+	go func() {
+		waitGroup.Wait()
+		close(chMerged)
+	}()
+
+	return chMerged
+}
+
+/* ~~~ Final Operation ~~~ */
+func WordCount(chData <- chan string, bound int) {
+	counts := make(map[string]int)
+
+	for data := range chData {
+		counts[data]++
+	}
+
+	for s, i := range counts {
+		if i < bound {
+			delete(counts, s)
+		}
+	}
+
+	log.Println(counts)
 }

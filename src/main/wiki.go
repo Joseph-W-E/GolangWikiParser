@@ -13,7 +13,7 @@ func main() {
 	http.HandleFunc("/", handleRequest)
 
 	// Start listening on the port
-	err := http.ListenAndServe(":9090", nil) // set listen port
+	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -23,7 +23,7 @@ func main() {
 func handleRequest(w http.ResponseWriter, request *http.Request) {
 	log.Println("Handling request...")
 
-	url := DecodeRequest(request)
+	url, bound := DecodeRequest(request)
 
 	if (ValidateURL(url)) {
 
@@ -38,11 +38,9 @@ func handleRequest(w http.ResponseWriter, request *http.Request) {
 		// we can now merge our slice of channels
 		chFanIn := FanIn(fanOutHelpers)
 
-		x := 0
-		for range chFanIn {
-			x++
-		}
-		log.Println(x)
+		/* lastly, we can process our results */
+
+		go WordCount(chFanIn, bound)
 
 	}
 }

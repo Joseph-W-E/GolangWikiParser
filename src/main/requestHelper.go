@@ -12,13 +12,12 @@ import (
 
 // struct for decoding the json request
 type Wiki struct {
-	URL     string `json:"url"`
+	URL     string  `json:"url"`
+	Bound   int     `json:"bound"`
 }
 
 // read the REST call and extract the url
-func DecodeRequest(request *http.Request) string {
-	log.Println("Decoding request...")
-
+func DecodeRequest(request *http.Request) (string, int) {
 	decoder := json.NewDecoder(request.Body)
 
 	var wiki Wiki
@@ -30,7 +29,7 @@ func DecodeRequest(request *http.Request) string {
 
 	defer request.Body.Close()
 
-	return wiki.URL
+	return wiki.URL, wiki.Bound
 }
 
 // make sure the url is a valid wikipedia link
@@ -59,8 +58,6 @@ func Tokenize(url string) <- chan string {
 
 // helper to download a webpage as a string
 func downloadToString(url string) string {
-	log.Println("Downloading webpage...")
-
 	// download the web page
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
